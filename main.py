@@ -13,10 +13,10 @@ import numpy
 from sklearn.linear_model import LogisticRegression
 
 TRAIN_NUMBER = 32000
-NUMBER_TWEET_2016 = 00000
+NUMBER_TWEET_2016 = 476032
 NUMBER_TWEET_2016_POS = 0000
-NUMBER_ORIANE_POS = 00000
-NUMBER_ORIANE_NEG = 00000
+NUMBER_ORIANE_POS = 1048
+NUMBER_ORIANE_NEG = 29970
 
 # LabeledSentence or TaggedDocument from gensim.models.doc2vec
 class TaggedTweet(object):
@@ -52,7 +52,7 @@ class TaggedTweet(object):
         return self.sentences
 
 # oriane_pos + oriane_neg = 2015 and 2016.txt
-sources = {'oriane_positif.txt':'TRAIN_POS', 'oriane_neg.txt':'TRAIN_NEG', '2016.txt':'TEST'}
+sources = {'oriane_positif.txt':'TRAIN_POS', 'oriane_negatif.txt':'TRAIN_NEG', '2016.txt':'TEST'}
 
 print('TaggedTweet')
 sentences = TaggedTweet(sources)
