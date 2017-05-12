@@ -12,11 +12,12 @@ import numpy
 # classifier
 from sklearn.linear_model import LogisticRegression
 
-TRAIN_NUMBER = 32000
+
 NUMBER_TWEET_2016 = 476032
 NUMBER_TWEET_2016_POS = 00000
 NUMBER_ORIANE_POS = 1048
-NUMBER_ORIANE_NEG = 29970
+NUMBER_ORIANE_NEG = 29960
+TRAIN_NUMBER = NUMBER_ORIANE_POS + NUMBER_ORIANE_NEG
 
 # LabeledSentence or TaggedDocument from gensim.models.doc2vec
 class TaggedTweet(object):
@@ -54,20 +55,20 @@ class TaggedTweet(object):
 # oriane_pos + oriane_neg = 2015 and 2016.txt
 sources = {'oriane_positif.txt':'TRAIN_POS', 'oriane_negatif.txt':'TRAIN_NEG', '2016.txt':'TEST'}
 
-print('TaggedTweet')
-sentences = TaggedTweet(sources)
-
-print('D2V')
-model = Doc2Vec(min_count=1, window=5, size=100, sample=1e-4, negative=5, workers=7)
-model.build_vocab(sentences.to_array())
-
-print('Epoch')
-for epoch in range(10):
-    print('EPOCH: {}'.format(epoch))
-    model.train(sentences.sentences_perm())
-
-model.save('./imdb.d2v')
-model = Doc2Vec.load('./imdb.d2v')
+# print('TaggedTweet')
+# sentences = TaggedTweet(sources)
+#
+# print('D2V')
+# model = Doc2Vec(min_count=1, window=5, size=100, sample=1e-4, negative=5, workers=7)
+# model.build_vocab(sentences.to_array())
+#
+# print('Epoch')
+# for epoch in range(10):
+#     print('EPOCH: {}'.format(epoch))
+#     model.train(sentences.sentences_perm())
+#
+# model.save('./imdb.d2v')
+model = Doc2Vec.load('./fdl20152016.d2v')
 
 train_arrays = numpy.zeros((TRAIN_NUMBER, 100))
 train_labels = numpy.zeros(TRAIN_NUMBER)
@@ -77,15 +78,15 @@ for i in range(NUMBER_ORIANE_POS):
     train_arrays[i] = model.docvecs[prefix_train_pos]
     train_labels[i] = 1
 
-for i in range(NUMBER_ORIANE_POS, NUMBER_ORIANE_POS + NUMBER_ORIANE_NEG):
-    prefix_train_neg = 'TRAIN_NEG_' + str(i)
+for i in range(NUMBER_ORIANE_POS, NUMBER_ORIANE_POS + NUMBER_ORIANE_NEG-1):
+    prefix_train_neg = 'TRAIN_NEG_' + str(i-NUMBER_ORIANE_POS)
     train_arrays[i] = model.docvecs[prefix_train_neg]
-    train_labels[i] = 0\
+    train_labels[i] = 0
 
 print(train_labels)
 
-test_arrays = numpy.zeros((25000, 100))
-test_labels = numpy.zeros(25000)
+test_arrays = numpy.zeros((NUMBER_TWEET_2016, 100))
+test_labels = numpy.zeros(NUMBER_TWEET_2016)
 
 for i in range(NUMBER_TWEET_2016):
     prefix_test = 'TEST_' + str(i)
