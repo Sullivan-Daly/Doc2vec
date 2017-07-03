@@ -6,9 +6,15 @@ warnings.filterwarnings(action='ignore', category=UserWarning, module='gensim')
 from gensim import utils
 from gensim.models.doc2vec import TaggedDocument
 from gensim.models import Doc2Vec
+from sklearn.metrics import jaccard_similarity_score
+
+from math import*
+
+import scipy
 
 # configparser
 import configparser
+import difflib
 
 # random shuffle
 from random import shuffle
@@ -176,11 +182,59 @@ def Classifier(model, train_arrays, train_labels, tConfig):
 
     fResult = open(tConfig['sResultFile'], 'w', encoding='utf16')
 
+    test_num = 1
+
     with open(tConfig['fCorpus2016'], "r", encoding='utf16') as file:
         for item_no, row in enumerate(file):
-            if item_no >= 1 and result_labels[item_no - 1] == 1.:
+            if item_no >= 1 and result_labels[item_no - 2] == 1.:
                 fResult.write(row)
 
+
+def square_rooted(x):
+    return round(sqrt(sum([a * a for a in x])), 3)
+
+
+def cosine_similarity(x, y):
+    numerator = sum(a * b for a, b in zip(x, y))
+    denominator = square_rooted(x) * square_rooted(y)
+    return round(numerator / float(denominator), 3)
+
+def jaccard_similarity(x, y):
+    intersection_cardinality = len(set.intersection(*[set(x), set(y)]))
+    union_cardinality = len(set.union(*[set(x), set(y)]))
+    return intersection_cardinality / float(union_cardinality)
+
+
+def dice_coefficient(a, b):
+    """dice coefficient 2nt/na + nb."""
+    a_bigrams = set(a)
+    b_bigrams = set(b)
+    overlap = len(a_bigrams & b_bigrams)
+    return overlap * 2.0/(len(a_bigrams) + len(b_bigrams))
+
+
+def similarity(tConfig):
+    fResult = open(tConfig['sResultFile'], 'r', encoding='utf16')
+    fMabed = open(tConfig['sMabedFile'], 'r', encoding='utf16')
+
+    tResult = []
+    tMabed = []
+
+    print("file -> " + tConfig['sResultFile'])
+
+    count = 0
+    for line in fResult:
+        tResult.append(int(line.split("; ", maxsplit=3)[1]))
+        count += 1
+
+    count = 0
+    for line in fMabed:
+        tMabed.append(int(line.split("; ", maxsplit=3)[1]))
+        count += 1
+
+    print(cosine_similarity(tResult, tMabed))
+    print(dice_coefficient(tResult, tMabed))
+    print(jaccard_similarity(tResult, tMabed))
 
 def main():
     model = Doc2Vec(min_count=1, window=5, size=100, sample=1e-4, negative=5, workers=7)
@@ -212,6 +266,7 @@ def main():
     train_arrays = xResults[1]
     train_labels = xResults[2]
     Classifier(model, train_arrays, train_labels, tConfig)
+    similarity(tConfig)
 
 
 if __name__ == '__main__':
