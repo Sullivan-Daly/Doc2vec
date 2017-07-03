@@ -200,10 +200,9 @@ def cosine_similarity(x, y):
     return round(numerator / float(denominator), 3)
 
 def jaccard_similarity(x, y):
-    intersection_cardinality = len(set.intersection(*[set(x), set(y)]))
-    union_cardinality = len(set.union(*[set(x), set(y)]))
+    intersection_cardinality = len(set(x).intersection(set(y)))
+    union_cardinality = len(set(x).union(set(y)))
     return intersection_cardinality / float(union_cardinality)
-
 
 def dice_coefficient(a, b):
     """dice coefficient 2nt/na + nb."""
@@ -212,29 +211,80 @@ def dice_coefficient(a, b):
     overlap = len(a_bigrams & b_bigrams)
     return overlap * 2.0/(len(a_bigrams) + len(b_bigrams))
 
+def ensemble(a, b):
+    intersection_cardinality = len(set(a).intersection(set(b)))
+    return intersection_cardinality / float(len(a))
 
 def similarity(tConfig):
     fResult = open(tConfig['sResultFile'], 'r', encoding='utf16')
     fMabed = open(tConfig['sMabedFile'], 'r', encoding='utf16')
 
-    tResult = []
-    tMabed = []
+    tResult_s = []
+    tMabed_s = []
+    tResult_n = []
+    tMabed_n = []
 
     print("file -> " + tConfig['sResultFile'])
 
     count = 0
     for line in fResult:
-        tResult.append(int(line.split("; ", maxsplit=3)[1]))
+        tResult_s.append(line.split("; ", maxsplit=3)[2][1:-2])
+        tResult_n.append(int(line.split("; ", maxsplit=3)[1]))
         count += 1
 
     count = 0
     for line in fMabed:
-        tMabed.append(int(line.split("; ", maxsplit=3)[1]))
+        tMabed_s.append(line.split("; ", maxsplit=3)[2][:-1])
+        tMabed_n.append(int(line.split("; ", maxsplit=3)[1]))
         count += 1
 
-    print(cosine_similarity(tResult, tMabed))
-    print(dice_coefficient(tResult, tMabed))
-    print(jaccard_similarity(tResult, tMabed))
+
+    a = 0
+    b = 0
+    for x in tResult_n:
+        b = 0
+        for y in tMabed_n:
+            if x == y:
+                print(tResult_s[a])
+                print(tMabed_s[b])
+                print()
+            b += 1
+        a += 1
+
+    #print(cosine_similarity(tResult, tMabed))
+
+    print('TAILLE A')
+    print(len(tResult_s))
+    print('TAILLE B')
+    print(len(tMabed_s))
+
+    print('')
+    print('tweets')
+    print('')
+
+    print('DICE')
+    print(dice_coefficient(tResult_s, tMabed_s))
+    print('JACCARD')
+    print(jaccard_similarity(tResult_s, tMabed_s))
+
+    print('A in B')
+    print(ensemble(tResult_s, tMabed_s))
+    print('B in A')
+    print(ensemble(tMabed_s, tResult_s))
+
+    print('')
+    print('ID')
+    print('')
+
+    print('DICE')
+    print(dice_coefficient(tResult_n, tMabed_n))
+    print('JACCARD')
+    print(jaccard_similarity(tResult_n, tMabed_n))
+
+    print('A in B')
+    print(ensemble(tResult_n, tMabed_n))
+    print('B in A')
+    print(ensemble(tMabed_n, tResult_n))
 
 def main():
     model = Doc2Vec(min_count=1, window=5, size=100, sample=1e-4, negative=5, workers=7)
